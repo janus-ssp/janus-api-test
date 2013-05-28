@@ -1,60 +1,16 @@
 <?php
-// *******************
-// BEGIN CONFIGURATION
-$config = array(
-    "janus_key" => "engine",
-    "secret" => "engineblock",
-    "output_dir" => __DIR__ . DIRECTORY_SEPARATOR . "data"
-);
+$config = parse_ini_file(__DIR__ . DIRECTORY_SEPARATOR . "config.ini");
 
-// IdP entities to test
-$idpEntities = array(
-    "https://openidp.feide.no",
-//    "https://engine.demo.openconext.org/authentication/idp/metadata",
-    "http://mock-idp",
-//    "http://idp.ssocircle.com"
-);
+if (FALSE === $config) {
+    die("unable to read configuration file");
+}
 
-// SP entities to test
-$spEntities = array(
-    "https://api.demo.openconext.org/",
-//    "https://engine.demo.openconext.org/authentication/sp/metadata",
-    "https://grouper.demo.openconext.org/grouper/shibboleth",
-//    "https://manage.demo.openconext.org/simplesaml/module.php/saml/sp/metadata.php/default-sp",
-//    "http://mock-sp",
-//    "https://profile.demo.openconext.org/simplesaml/module.php/saml/sp/metadata.php/default-sp",
-//    "https://serviceregistry.demo.openconext.org/simplesaml/module.php/saml/sp/metadata.php/default-sp",
-//    "https://teams.demo.openconext.org/shibboleth"
-);
+$idpEntities = $config['idpEntities'];
+$spEntities = $config['spEntities'];
+$idpMetadataKeys = $config['idpMetadataKeys'];
+$spMetadataKeys = $config['spMetadataKeys'];
 
-$idpMetadataKeys = array(
-    "name:en",
-    "SingleSignOnService:0:Location",
-    "SingleSignOnService:0:Binding",
-    "keywords:en",
-    "keywords:nl",
-    "logo:0:url",
-    "logo:0:width",
-    "logo:0:height",
-    "displayName:en",
-    "displayName:nl"
-);
-
-$spMetadataKeys = array(
-    "name:en",
-    "AssertionConsumerService:0:Location",
-    "AssertionConsumerService:0:Binding",
-    "keywords:en",
-    "keywords:nl",
-    "logo:0:url",
-    "logo:0:width",
-    "logo:0:height",
-    "displayName:en",
-    "displayName:nl"
-);
-
-// END CONFIGURATION
-// *****************
+$janus_base_url = $config['janus_base_url'];
 
 // TEST FUNCTIONS
 function getEntity(array $config, $entityId)
@@ -171,6 +127,8 @@ function getMetadataKeyArray(array $config, $entityId, array $keys)
 // HELPER FUNCTIONS
 function restCall(array $config, array $values)
 {
+    global $janus_base_url;
+
     ksort($values);
     $concat_string = '';
     foreach ($values as $key => $value) {
@@ -179,7 +137,7 @@ function restCall(array $config, array $values)
     $prepend_secret = $config['secret'] . $concat_string;
     $hash_string = hash('sha512', $prepend_secret);
     $query = http_build_query($values);
-    $requestURL = 'https://serviceregistry.demo.openconext.org/module.php/janus/services/rest/?'.$query.'&janus_sig=' .$hash_string;
+    $requestURL = $janus_base_url . '?'.$query.'&janus_sig=' .$hash_string;
 
     return @file_get_contents($requestURL);
 }
