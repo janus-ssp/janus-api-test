@@ -1,4 +1,7 @@
 <?php
+
+ob_start();
+
 $config = parse_ini_file(__DIR__ . DIRECTORY_SEPARATOR . "config.ini");
 
 if (FALSE === $config) {
@@ -261,3 +264,14 @@ foreach ($idpEntities as $i) {
 foreach ($spEntities as $s) {
     compareData($config, "arp", arp($config, $s), $s);
 }
+
+;
+
+$output = ob_get_contents();
+ob_end_clean();
+
+if (!empty($output)) {
+    echo $output;
+    exit(1);
+}
+exit(0);
